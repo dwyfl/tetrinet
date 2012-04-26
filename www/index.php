@@ -83,7 +83,7 @@ function filewithmtime($file) {
 $(document).ready(function() {
 	// Update name field
 	$('#name').val($.cookies.get('settings_name') || ('Guest' + Math.floor(1000 * Math.random())));
-	
+
 	// Start game
 	function start(name) {
 		var g = new Game(name, <?php echo $CONFIG['port']?>);
@@ -124,8 +124,9 @@ $(document).ready(function() {
         <p><label for="settings_attacknotifications">Attack notifications</label><input id="settings_attacknotifications" type="checkbox" name="attacknotifications" /></p>
         <p><label for="settings_keyrepeatdelay">Key repeat delay</label><input id="settings_keyrepeatdelay" type="text" name="keyrepeatdelay" /></p>
         <p><label for="settings_keyrepeatinterval">Key repeat interval</label><input id="settings_keyrepeatinterval" type="text" name="keyrepeatinterval" /></p>
-        <p><label for="settings_buffersize">Log buffer size</label><input id="settings_buffersize" type="text" name="buffersize" /></p>
+        <p><label for="settings_logbuffersize">Log buffer size</label><input id="settings_logbuffersize" type="text" name="buffersize" /></p>
         <p><label for="settings_logautoscroll">Log auto scroll</label><input id="settings_logautoscroll" type="checkbox" name="autoscroll" /></p>
+        <p><label for="settings_logtimestamp">Log timestamp</label><input id="settings_logtimestamp" type="checkbox" name="timestamp" /></p>
         <h3>Keys</h3>
         <div id="settings_keys">
 	      <p><label for="settings_km_left">Left</label><input id="settings_km_left" class="keycode_listener" type="text" name="left" /></p>

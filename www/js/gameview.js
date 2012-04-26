@@ -206,11 +206,15 @@ GameView.prototype.init = function() {
 			$('#settings_attacknotifications').attr('checked', 'checked');
 		else
 			$('#settings_attacknotifications').removeAttr('checked');
-		$('#settings_buffersize').val(Settings.log.buffer_size);
+		$('#settings_logbuffersize').val(Settings.log.buffer_size);
 		if (Settings.log.autoscroll)
 			$('#settings_logautoscroll').attr('checked', 'checked');
 		else
 			$('#settings_logautoscroll').removeAttr('checked');
+		if (Settings.log.timestamp)
+			$('#settings_logtimestamp').attr('checked', 'checked');
+		else
+			$('#settings_logtimestamp').removeAttr('checked');
 		$('#settings_keys input').each(function(index) {
 			$(this).val(getCharFromKeyCode(Settings.keymap[$(this).attr('name')]));
 			$(this).data('keycode', Settings.keymap[$(this).attr('name')]);
@@ -238,8 +242,14 @@ GameView.prototype.init = function() {
 		Settings.misc.attack_notifications = $('#settings_attacknotifications').is(':checked');
 		Settings.misc.keypress_repeat_delay = Math.max(1, parseInt($('#settings_keyrepeatdelay').val()));
 		Settings.misc.keypress_repeat_interval = Math.max(1, parseInt($('#settings_keyrepeatinterval').val()));
-		Settings.log.buffer_size = Math.max(1, parseInt($('#settings_buffersize').val()));
+		Settings.log.buffer_size = Math.max(1, parseInt($('#settings_logbuffersize').val()));
 		Settings.log.autoscroll = $('#settings_logautoscroll').is(':checked');
+		Settings.log.timestamp = $('#settings_logtimestamp').is(':checked');
+		if (Settings.log.timestamp) {
+			$('#gamelog').addClass('timestamp-visible');
+		} else {
+			$('#gamelog').removeClass('timestamp-visible');
+		}
 		Bw.setCookie('settings_name', Settings.name);
 		Bw.setCookie('settings_misc', Settings.misc);
 		Bw.setCookie('settings_keymap', Settings.keymap);

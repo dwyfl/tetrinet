@@ -153,9 +153,18 @@ Game.prototype.gameLog = function(msg, logClass) {
 	for (i in logClass)
 		logClass[i] = '#gamelog > div.' + logClass[i];
 	var c = $(logClass.join(','));
-	c.append('<p>'+msg+'</p>');
+	var formatNumber = function(i) {
+		return i < 10 ? '0'+i : i;
+	};
+	var date = new Date();
+	var dateString = '<span class="timestamp">' +
+		formatNumber(date.getHours()) + ':' +
+		formatNumber(date.getMinutes()) + ':' +
+		formatNumber(date.getSeconds()) + '</span>';
 	c.each(function(){
-		if (Settings.log.autoscroll)
+		var updateScroll = Settings.log.autoscroll && (this.scrollTop == (this.scrollHeight - $(this).height()));
+		$(this).append('<p>'+dateString+msg+'</p>');
+		if (updateScroll)
 			this.scrollTop = this.scrollHeight;
 		while ($(this).children().length > Settings.log.buffer_size)
 			$(this).children(':first').remove();

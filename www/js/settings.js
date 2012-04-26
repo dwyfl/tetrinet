@@ -9,6 +9,7 @@ Settings = {
 		keypress_repeat_interval: 50
 	},
 	log: {
+		timestamp: false,
 		autoscroll: true,
 		buffer_size: 100,
 		selected_filter: 0,
@@ -51,3 +52,14 @@ if ($ && $.cookies) {
 	
 	$.extend(true, Settings, SavedSettings);
 }
+
+$('document').ready(function(){
+
+	// init settings
+	
+	if (Settings.log.timestamp) {
+		$('#gamelog').addClass('timestamp-visible');
+	} else {
+		$('#gamelog').removeClass('timestamp-visible');
+	}
+});
