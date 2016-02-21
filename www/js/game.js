@@ -114,8 +114,10 @@ Game.prototype.checkNotify = function() {
 	}
 }
 
-Game.prototype.createNotification = function(sender, message) {
-	var notification = window.webkitNotifications.createNotification("images/explosion.gif", "Tetrinet: " + sender, message);
+Game.prototype.createNotification = function(sender, message, image) {
+	if (typeof image == 'undefined')
+		image = 'images/logotype.png';
+	var notification = window.webkitNotifications.createNotification(image, "Tetrinet: " + sender, message);
 	setTimeout(function() { notification.cancel(); }, 2000);
 	notification.show();
 }
@@ -144,6 +146,13 @@ Game.prototype.send = function(msg) {
 Game.prototype.sendBoard = function() {
 	if (this.player) {
 		this.send({t: Message.UPDATE_BOARD, d: this.player.data});
+	}
+}
+
+Game.prototype.sendPiece = function() {
+	if (this.player && this.player.currentBlock) {
+		var block = this.player.currentBlock;
+		this.send({t: Message.UPDATE_PIECE, pt: block.type, x: block.x, y: block.y, r: block.rotation});
 	}
 }
 
@@ -230,7 +239,7 @@ Game.prototype.updatePlayers = function() {
 	for(var pp in this.players) {
 		var p = this.players[pp];
 		p.view.el.find('h2')
-			.html('<span class="player-id">(' + (p.id + 1) + ')</span> <span class="player-name">' + p.name + '</span>')
+			.html('<span class="player-id">' + (p.id + 1) + '.</span> <span class="player-name">' + p.name + '</span>')
 			.css({backgroundColor: p.team});
 	}
 }
@@ -262,11 +271,15 @@ Game.prototype.handleMessage = function(msg) {
 			var p;
 			if (msg.self) {
 				p = this.player = new Player();
+				p.setOptions(this.options);
 				p.view = new PlayerView(p);
 				p.view.el.prependTo('#gamearea').addClass('self');
 				
 				p.on(Board.EVENT_CHANGE, function() {
 					self.sendBoard();
+				});
+				p.on(Board.EVENT_UPDATE, function() {
+					self.sendPiece();
 				});
 				p.on(Player.EVENT_GAMEOVER, function() {
 					self.printStats();
@@ -320,7 +333,6 @@ Game.prototype.handleMessage = function(msg) {
 				p.on(Player.EVENT_DROP, function() {
 					self.lastMoveRotate = false;
 				});
-				p.setOptions(this.options);
 			} else {
 				p = new Board();
 				p.view = new PlayerView(p);
@@ -329,8 +341,12 @@ Game.prototype.handleMessage = function(msg) {
 			p.name = msg.p.name;
 			p.team = msg.p.team;
 			p.id = msg.p.index;
-			if(msg.join)
+			if(msg.join) {
 				this.gameLog('<em class="status">' + htmlspecialchars(p.name) + ' joined the game</em>', Game.LOG_STATUS);
+				if (this.notify && !Bw.windowIsActive) {
+					this.createNotification('Join', p.name + ' joined the game');
+				}
+			}
 			if(this.players[p.id])
 				this.removePlayer(p.id);
 			this.players[p.id] = p;
@@ -352,6 +368,9 @@ Game.prototype.handleMessage = function(msg) {
 			if (this.target == p.id && p.id != this.player.id)
 				this.cycleTarget(-1);
 				*/
+			if(p === this.player) {
+				$('#chatbox').removeClass('collapsed');
+			}
 			break;
 			
 		case Message.WINNER:
@@ -365,6 +384,7 @@ Game.prototype.handleMessage = function(msg) {
 					this.printStats();
 					$('body').addClass('winner');
 					$('.player').removeClass('target');
+					$('#chatbox').removeClass('collapsed');
 				}
 				this.gameLog(htmlspecialchars(p.name) + ' has won the game.', [ Game.LOG_STATUS ]);
 			}
@@ -396,6 +416,7 @@ Game.prototype.handleMessage = function(msg) {
 			//$('#gamelog').empty();
 			$('body').removeClass('winner');
 			$('.player').removeClass('gameover winner');
+			$('#chatbox').addClass('collapsed');
 			for(var p in this.players)
 				this.players[p].isPlaying = true;
 			this.player.start(msg.seed);
@@ -409,11 +430,19 @@ Game.prototype.handleMessage = function(msg) {
 			p.emit(Board.EVENT_UPDATE);
 			break;
 			
+		case Message.UPDATE_PIECE:
+			var p = this.players[msg.id];
+			p.currentBlock = new Block(msg.pt, msg.r);
+			p.currentBlock.x = msg.x;
+			p.currentBlock.y = msg.y;
+			p.emit(Board.EVENT_UPDATE);
+			break;
+			
 		case Message.CHAT:
 			var name;
 			if (msg.id == null) {
 				name = 'Server';
-				this.gameLog('<em class="status">'+ msg.text +'</em>', Game.LOG_STATUS);
+				this.chat(msg.text);
 			} else {
 				name = this.players[msg.id].name;
 				this.chat(name + ': ' + msg.text);
@@ -458,7 +487,13 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.ROOMS:
 			var $rooms = $('#lobby ul').empty();
 			for(var i=0; i < msg.r.length; ++i)
-				$rooms.append('<li><a href="#">'+msg.r[i].n + '</a> (' + msg.r[i].p + ')</li>');
+				$rooms.append(
+					$('<li><a href="#" class="btn"></a></li>')
+						.find('a')
+						.text(msg.r[i].n + ' (' + msg.r[i].p + ')')
+						.data('room',msg.r[i].n)
+						.end()
+				);
 			break;
 			
 		case Message.SET_ROOM:
